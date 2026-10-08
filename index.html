@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IAM FREE FIRE MANAGER</title>
+<style>
+/* ============================================================
+   BIẾN MÀU VÀ THIẾT LẬP CHUNG
+   ============================================================ */
+:root {
+  --nen-chinh: #0a0a0a;
+  --nen-phu: #1a1a1a;
+  --mau-chu: #00ffaa;
+  --mau-vang: #ffaa00;
+  --mau-do: #ff3344;
+  --mau-xanh: #00aaff;
+  --mau-tim: #aa00ff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Consolas', 'Courier New', monospace;
+  background: var(--nen-chinh);
+  color: #ffffff;
+  min-height: 100vh;
+  padding: 20px;
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   HIỆU ỨNG VIỀN CẦU VỒNG CHẠY QUANH
+   ============================================================ */
+.khung-vien {
+  position: relative;
+  padding: 20px;
+  border-radius: 12px;
+  background: var(--nen-chinh);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.khung-vien::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 14px;
+  padding: 3px;
+  background: linear-gradient(
+    90deg,
+    #ff0000, #ff7f00, #ffff00, #00ff00,
+    #00ffff, #0000ff, #4b0082, #9400d3,
+    #ff0000
+  );
+  background-size: 400% 400%;
+  animation: chay-cau-vong 3s linear infinite;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes chay-cau-vong {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 400% 50%; }
+}
+
+/* ============================================================
+   TIÊU ĐỀ
+   ============================================================ */
+.tieu-de {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.tieu-de h1 {
+  font-size: 26px;
+  color: var(--mau-chu);
+  text-shadow: 0 0 12px rgba(0, 255, 170, 0.6);
+  letter-spacing: 2px;
+}
+
+.tieu-de p {
+  font-size: 12px;
+  color: #888;
+  margin-top: 6px;
+  letter-spacing: 1px;
+}
+
+/* ============================================================
+   KHU NHẬP LIỆU
+   ============================================================ */
+.khu-nhap {
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 14px;
+  background: rgba(26, 26, 26, 0.6);
+}
+
+.khu-nhap h3 {
+  font-size: 12px;
+  color: var(--mau-vang);
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.hang-nhap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.o-nhap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 220px;
+}
+
+.o-nhap label {
+  font-size: 12px;
+  color: #cccccc;
+  min-width: 70px;
+}
+
+.o-nhap input {
+  flex: 1;
+  background: #0d0d0d;
+  border: 1px solid #333;
+  color: var(--mau-chu);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+.o-nhap input:focus {
+  border-color: var(--mau-chu);
+  box-shadow: 0 0 8px rgba(0, 255, 170, 0.4);
+}
+
+/* ============================================================
+   NÚT CHỨC NĂNG
+   ============================================================ */
+.khu-nut {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.nut {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: transform 0.15s, box-shadow 0.2s, filter 0.2s;
+}
+
+.nut:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.2);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+}
+
+.nut:active { transform: translateY(0); }
+
+.nut-them      { background: #00aa55; }
+.nut-sua       { background: #0066cc; }
+.nut-xoa       { background: #cc0000; }
+.nut-moi       { background: #666666; }
+.nut-xuat      { background: #aa6600; }
+.nut-nhap      { background: #6600aa; }
+.nut-ngau      { background: #008888; }
+.nut-xoa-het   { background: #550000; }
+
+/* ============================================================
+   BẢNG DỮ LIỆU
+   ============================================================ */
+.khu-bang {
+  border: 1px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(26, 26, 26, 0.6);
+}
+
+.bang-tai-khoan {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.bang-tai-khoan thead {
+  background: #111;
+}
+
+.bang-tai-khoan th {
+  color: var(--mau-vang);
+  padding: 10px 8px;
+  text-align: left;
+  font-weight: bold;
+  letter-spacing: 1px;
+  border-bottom: 1px solid #333;
+  white-space: nowrap;
+}
+
+.bang-tai-khoan td {
+  padding: 8px;
+  border-bottom: 1px solid #1f1f1f;
+  color: #dddddd;
+  font-size: 12px;
+}
+
+.bang-tai-khoan tbody tr {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.bang-tai-khoan tbody tr:hover {
+  background: rgba(0, 255, 170, 0.08);
+}
+
+.bang-tai {
+-khoan tbody tr.chon {
+  background: rgba(0, 255, 170, 0.18);
+}
+
+.trang-thai-badge  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  background: #00aa55;
+  color: #fff;
+}
+
+/* ============================================================
+   THANH TRẠNG THÁI
+   ============================================================ */
+.thanh-trang-thai {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #111;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--mau-chu);
+  letter-spacing: 1px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.thanh-trang-thai span { color: #888; }
+
+/* ============================================================
+   THÔNG BÁO TOAST
+   ============================================================ */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #1a1a1a;
+  border-left: 4px solid var(--mau-chu);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-family: inherit;
+  opacity: 0;
+  transform: translateX(120%);
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 9999;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+}
+
+.toast.hien {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.toast.loi { border-left-color: var(--mau-do); }
+.toast.thanh-cong { border-left-color: #00aa55; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 700px) {
+  .o-nhap { min-width: 100%; }
+  .tieu-de h1 { font-size: 18px; }
+  .nut { padding: 8px 12px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     KHUNG CHÍNH VỚI VIỀN CẦU VỒNG
+     ============================================================ -->
+<div class="khung-vien">
+
+  <!-- TIÊU ĐỀ -->
+  <div class="tieu-de">
+    <h1>⚡ IAM FREE FIRE MANAGER ⚡</h1>
+    <p>HỆ THỐNG QUẢN LÝ TÀI KHOẢN IAM CHUYÊN NGHIỆP</p>
+  </div>
+
+  <!-- KHU NHẬP LIỆU -->
+  <div class="khu-nhap">
+    <h3>▸ THÔNG TIN TÀI KHOẢN</h3>
+
+    <div class="hang-nhap">
+      <div class="o-nhap">
+        <label for="oTen">Tên:</label>
+        <input type="text" id="oTen" placeholder="Nhập tên tài khoản">
+      </div>
+      <div class="o-nhap">
+        <label for="oUid">UID:</label>
+        <input type="text" id="oUid" placeholder="Nhập UID Free Fire">
+      </div>
+    </div>
+
+    <div class="hang-nhap">
+      <div class="o-nhap">
+        <label for="oMatKhau">Mật khẩu:</label>
+        <input type="password" id="oMatKhau" placeholder="Nhập mật khẩu">
+      </div>
+      <div class="o-nhap">
+        <label for="oGhiChu">Ghi chú:</label>
+        <input type="text" id="oGhiChu" placeholder="Ghi chú (tùy chọn)">
+      </div>
+    </div>
+
+    <div class="hang-nhap">
+      <div class="o-nhap" style="flex: 2;">
+        <label for="oTimKiem">Tìm kiếm:</label>
+        <input type="text" id="oTimKiem" placeholder="Tìm theo tên hoặc UID...">
+      </div>
+    </div>
+  </div>
+
+  <!-- NÚT CHỨC NĂNG -->
+  <div class="khu-nut">
+    <button class="nut nut-them" onclick="themTaiKhoan()">+ THÊM</button>
+    <button class="nut nut-sua" onclick="suaTaiKhoan()">✎ SỬA</button>
+    <button class="nut nut-xoa" onclick="xoaTaiKhoan()">✖ XÓA</button>
+    <button class="nut nut-moi" onclick="lamMoi()">⟳ LÀM MỚI</button>
+    <button class="nut nut-xuat" onclick="xuatJSON()">⬇ XUẤT JSON</button>
+    <button class="nut nut-nhap" onclick="document.getElementById('fileNhap').click()">⬆ NHẬP JSON</button>
+    <button class="nut nut-ngau" onclick="taoNgauNhien()">⚄ NGẪU NHIÊN</button>
+    <button class="nut nut-xoa-het" onclick="xoaHet()">🗑 XÓA HẾT</button>
+    <input type="file" id="fileNhap" accept=".json" style="display:none" onchange="nhapJSON(event)">
+  </div>
+
+  <!-- BẢNG DỮ LIỆU -->
+  <div class="khu-bang">
+    <table class="bang-tai-khoan">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>TÊN</th>
+          <th>UID</th>
+          <th>GHI CHÚ</th>
+          <th>NGÀY TẠO</th>
+          <th>TRẠNG THÁI</th>
+        </tr>
+      </thead>
+      <tbody id="thanBang">
+        <!-- Dữ liệu sẽ được render bằng JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- THANH TRẠNG THÁI -->
+  <div class="thanh-trang-thai">
+    <div id="trangThaiText">SẴN SÀNG</div>
+    <div>TỔNG: <span id="tongSo">0</span> TÀI KHOẢN</div>
+  </div>
+
+</div>
+
+<!-- THÔNG BÁO TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   LỚP QUẢN LÝ DỮ LIỆU IAM - LƯU TRỮ LOCALSTORAGE
+   ============================================================ */
+class IAMDataManager {
+  constructor() {
+    this.key = "iam_freefire_data";
+    this.data = this.taiDuLieu();
+    this.idDangChon = null;
+  }
+
+  // Tải dữ liệu từ localStorage
+  taiDuLieu() {
+    try {
+      const raw = localStorage.getItem(this.key);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return { accounts: [], history: [] };
+  }
+
+  // Lưu dữ liệu vào localStorage
+  luuDuLieu() {
+    localStorage.setItem(this.key, JSON.stringify(this.data));
+  }
+
+  // Tạo ID duy nhất
+  taoId() {
+    return "IAM" + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+  }
+
+  // Mã hóa mật khẩu đơn giản bằng btoa
+  maHoa(chuoi) {
+    return btoa(unescape(encodeURIComponent(chuoi)));
+  }
+
+  // Thêm tài khoản mới
+  themTaiKhoan(ten, uid, matKhau, ghiChu) {
+    const tk = {
+      id: this.taoId(),
+      ten: ten,
+      uid: uid,
+      matKhau: this.maHoa(matKhau),
+      ghiChu: ghiChu || "",
+      ngayTao: new Date().toLocaleString("vi-VN"),
+      trangThai: "hoat_dong"
+    };
+    this.data.accounts.push(tk);
+    this.luuDuLieu();
+    return tk;
+  }
+
+  // Cập nhật tài khoản
+  capNhatTaiKhoan(id, duLieu) {
+    const tk = this.data.accounts.find(a => a.id === id);
+    if (!tk) return null;
+    if (duLieu.ten) tk.ten = duLieu.ten;
+    if (duLieu.uid) tk.uid = duLieu.uid;
+    if (duLieu.matKhau) tk.matKhau = this.maHoa(duLieu.matKhau);
+    if (duLieu.ghiChu !== undefined) tk.ghiChu = duLieu.ghiChu;
+    this.luuDuLieu();
+    return tk;
+  }
+
+  // Xóa tài khoản theo ID
+  xoaTaiKhoan(id) {
+    this.data.accounts = this.data.accounts.filter(a => a.id !== id);
+    this.luuDuLieu();
+  }
+
+  // Xóa toàn bộ tài khoản
+  xoaHet() {
+    this.data.accounts = [];
+    this.luuDuLieu();
+  }
+
+  // Tìm kiếm theo từ khóa
+  timKiem(tuKhoa) {
+    tuKhoa = tuKhoa.toLowerCase();
+    return this.data.accounts.filter(a =>
+      a.ten.toLowerCase().includes(tuKhoa) ||
+      a.uid.toLowerCase().includes(tuKhoa)
+    );
+  }
+}
+
+/* ============================================================
+   KHỞI TẠO QUẢN LÝ VÀ RENDER
+   ============================================================ */
+const ql = new IAMDataManager();
+
+// Lấy các phần tử DOM
+const oTen = document.getElementById("oTen");
+const oUid = document.getElementById("oUid");
+const oMatKhau = document.getElementById("oMatKhau");
+const oGhiChu = document.getElementById("oGhiChu");
+const oTimKiem = document.getElementById("oTimKiem");
+const thanBang = document.getElementById("thanBang");
+const toastEl = document.getElementById("toast");
+const trangThaiText = document.getElementById("trangThaiText");
+const tongSo = document.getElementById("tongSo");
+
+/* ============================================================
+   HIỂN THỊ THÔNG BÁO TOAST
+   ============================================================ */
+function hienToast(noiDung, loai = "thanh-cong") {
+  toastEl.textContent = noiDung;
+  toastEl.className = "toast hien " + loai;
+  clearTimeout(toastEl._timer);
+  toastEl._timer = setTimeout(() => {
+    toastEl.classList.remove("hien");
+  }, 2600);
+}
+
+/* ============================================================
+   RENDER BẢNG DỮ LIỆU
+   ============================================================ */
+function renderBang(danhSach) {
+  const ds = danhSach || ql.data.accounts;
+  thanBang.innerHTML = "";
+
+  if (ds.length === 0) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="6" style="text-align:center;color:#666;padding:24px;">KHÔNG CÓ DỮ LIỆU</td>`;
+    thanBang.appendChild(tr);
+  } else {
+    ds.forEach(tk => {
+      const tr = document.createElement("tr");
+      if (tk.id === ql.idDangChon) tr.classList.add("chon");
+      tr.innerHTML = `
+        <td>${tk.id.substring(0, 8)}</td>
+        <td>${tk.ten}</td>
+        <td>${tk.uid}</td>
+        <td>${tk.ghiChu || ""}</td>
+        <td>${tk.ngayTao}</td>
+        <td><span class="trang-thai-badge">${tk.trangThai}</span></td>
+      `;
+      tr.onclick = () => chonDong(tk.id);
+      thanBang.appendChild(tr);
+    });
+  }
+  tongSo.textContent = ql.data.accounts.length;
+}
+
+/* ============================================================
+   CHỌN DÒNG TRONG BẢNG
+   ============================================================ */
+function chonDong(id) {
+  ql.idDangChon = id;
+  const tk = ql.data.accounts.find(a => a.id === id);
+  if (!tk) return;
+  oTen.value = tk.ten;
+  oUid.value = tk.uid;
+  oGhiChu.value = tk.ghiChu || "";
+  oMatKhau.value = "";
+  renderBang();
+  capNhatTrangThai("ĐÃ CHỌN: " + tk.ten);
+}
+
+/* ============================================================
+   CÁC CHỨC NĂNG XỬ LÝ
+   ============================================================ */
+function themTaiKhoan() {
+  const ten = oTen.value.trim();
+  const uid = oUid.value.trim();
+  const mk = oMatKhau.value.trim();
+  const gc = oGhiChu.value.trim();
+
+  if (!ten || !uid || !mk) {
+    hienToast("VUI LÒNG NHẬP ĐẦY ĐỦ TÊN, UID, MẬT KHẨU", "loi");
+    return;
+  }
+  ql.themTaiKhoan(ten, uid, mk, gc);
+  xoaONhap();
+  renderBang();
+  capNhatTrangThai("ĐÃ THÊM TÀI KHOẢN: " + ten);
+  hienToast("ĐÃ THÊM TÀI KHOẢN", "thanh-cong");
+}
+
+function suaTaiKhoan() {
+  if (!ql.idDangChon) {
+    hienToast("CHỌN TÀI KHOẢN CẦN SỬA", "loi");
+    return;
+  }
+  const ten = oTen.value.trim();
+  const uid = oUid.value.trim();
+  const mk = oMatKhau.value.trim();
+  const gc = oGhiChu.value.trim();
+
+  const dl = {};
+  if (ten) dl.ten = ten;
+  if (uid) dl.uid = uid;
+  if (mk) dl.matKhau = mk;
+  dl.ghiChu = gc;
+
+  ql.capNhatTaiKhoan(ql.idDangChon, dl);
+  renderBang();
+  capNhatTrangThai("ĐÃ CẬP NHẬT TÀI KHOẢN");
+  hienToast("ĐÃ CẬP NHẬT TÀI KHOẢN", "thanh-cong");
+}
+
+function xoaTaiKhoan() {
+  if (!ql.idDangChon) {
+    hienToast("CHỌN TÀI KHOẢN CẦN XÓA", "loi");
+    return;
+  }
+  if (!confirm("XÓA TÀI KHOẢN NÀY?")) return;
+  const ten = ql.data.accounts.find(a => a.id === ql.idDangChon)?.ten || "";
+  ql.xoaTaiKhoan(ql.idDangChon);
+  ql.idDangChon = null;
+  xoaONhap();
+  renderBang();
+  capNhatTrangThai("ĐÃ XÓA TÀI KHOẢN: " + ten);
+  hienToast("ĐÃ XÓA TÀI KHOẢN", "thanh-cong");
+}
+
+function xoaHet() {
+  if (ql.data.accounts.length === 0) {
+    hienToast("KHÔNG CÓ DỮ LIỆU ĐỂ XÓA", "loi");
+    return;
+  }
+  if (!confirm("XÓA TOÀN BỘ TÀI KHOẢN? KHÔNG THỂ HOÀN TÁC.")) return;
+  ql.xoaHet();
+  ql.idDangChon = null;
+  xoaONhap();
+  renderBang();
+  capNhatTrangThai("ĐÃ XÓA TOÀN BỘ DỮ LIỆU");
+  hienToast("ĐÃ XÓA TOÀN BỘ", "thanh-cong");
+}
+
+function lamMoi() {
+  ql.idDangChon = null;
+  xoaONhap();
+  oTimKiem.value = "";
+  renderBang();
+  capNhatTrangThai("ĐÃ LÀM MỚI");
+  hienToast("ĐÃ LÀM MỚI", "thanh-cong");
+}
+
+function taoNgauNhien() {
+  const kyTuTen = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const kyTuMk = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let ten = "IAM_";
+  for (let i = 0; i < 6; i++) ten += kyTuTen[Math.floor(Math.random() * kyTuTen.length)];
+  let uid = "";
+  for (let i = 0; i < 10; i++) uid += Math.floor(Math.random() * 10);
+  let mk = "";
+  for (let i = 0; i < 12; i++) mk += kyTuMk[Math.floor(Math.random() * kyTuMk.length)];
+
+  ql.themTaiKhoan(ten, uid, mk, "TẠO TỰ ĐỘNG");
+  renderBang();
+  capNhatTrangThai("ĐÃ TẠO TÀI KHOẢN NGẪU NHIÊN: " + ten);
+  hienToast("ĐÃ TẠO TÀI KHOẢN NGẪU NHIÊN", "thanh-cong");
+}
+
+function xuatJSON() {
+  const blob = new Blob([JSON.stringify(ql.data, null, 4)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "iam_backup_" + Date.now() + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+  capNhatTrangThai("ĐÃ XUẤT DỮ LIỆU RA JSON");
+  hienToast("ĐÃ XUẤT JSON", "thanh-cong");
+}
+
+function nhapJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const dl = JSON.parse(e.target.result);
+      if (!dl.accounts) throw new Error("SAI ĐỊNH DẠNG");
+      ql.data = dl;
+      ql.luuDuLieu();
+      renderBang();
+      capNhatTrangThai("ĐÃ NHẬP: " + file.name);
+      hienToast("ĐÃ NHẬP DỮ LIỆU", "thanh-cong");
+    } catch (err) {
+      hienToast("LỖI NHẬP FILE: " + err.message, "loi");
+    }
+  };
+  reader.readAsText(file, "UTF-8");
+  event.target.value = "";
+}
+
+function timKiem() {
+  const tuKhoa = oTimKiem.value.trim();
+  const ketQua = tuKhoa ? ql.timKiem(tuKhoa) : null;
+  renderBang(ketQua);
+  if (tuKhoa) capNhatTrangThai("TÌM THẤY: " + (ketQua ? ketQua.length : 0) + " TÀI KHOẢN");
+}
+
+function xoaONhap() {
+  oTen.value = "";
+  oUid.value = "";
+  oMatKhau.value = "";
+  oGhiChu.value = "";
+}
+
+function capNhatTrangThai(noiDung) {
+  trangThaiText.textContent = noiDung;
+}
+
+/* ============================================================
+   GẮN SỰ KIỆN
+   ============================================================ */
+oTimKiem.addEventListener("input", timKiem);
+
+// Khởi tạo lần đầu
+renderBang();
+capNhatTrangThai("SẴN SÀNG");
+</script>
+</body>
+</html>
